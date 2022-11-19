@@ -1,0 +1,15 @@
+name = "cloudflare-b2"
+
+workers_dev = true
+compatibility_date = "2022-11-18"
+
+main = "index.js"
+
+# Don't put your application key in this file!
+# You should set it as a secret in the Cloudflare dashboard or at the command line:
+# echo "<your b2 application key>" | wrangler secret put AWS_SECRET_ACCESS_KEY
+[vars]
+AWS_ACCESS_KEY_ID = "<your b2 application key id>"
+AWS_S3_ENDPOINT = "<your S3 endpoint - e.g. s3.us-west-001.backblazeb2.com >"
+# set BUCKET_IN_PATH to true, if clients pass the bucket name in the URL path, false otherwise
+BUCKET_IN_PATH = true
