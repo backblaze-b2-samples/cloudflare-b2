@@ -28,8 +28,26 @@ async function handleRequest(event, client) {
         });
     }
 
-    // Set upstream target hostname.
     const url = new URL(request.url);
+
+    // Don't allow clients to list the bucket contents!
+    //
+    // Remove leading slashes from path
+    let path = url.pathname.replace(/^\//, '');
+    // Remove trailing slashes
+    path = path.replace(/\/$/, '');
+    // Split the path into segments
+    const pathSegments = path.split('/');
+    // Now see if it's a list bucket request
+    if ((BUCKET_IN_PATH && pathSegments[0].length < 2) // https://endpoint/bucket-name/
+        || (!BUCKET_IN_PATH && path.length === 0)) {   // https://bucket-name.endpoint/
+        return new Response(null, {
+            status: 404,
+            statusText: "Not Found"
+        });
+    }
+
+    // Set upstream target hostname.
     url.hostname = BUCKET_IN_PATH
         ? AWS_S3_ENDPOINT
         : url.hostname.split('.')[0] + '.' + AWS_S3_ENDPOINT;
