@@ -18,7 +18,7 @@ B2_ENDPOINT = "<your S3 endpoint - e.g. s3.us-west-001.backblazeb2.com >"
 #           e.g. https://images.example.com/bucket-name/path/to/object.png
 #   "$host" - use the initial subdomain in the hostname as the bucket name
 #           e.g. https://bucket-name.images.example.com/path/to/object.png
-BUCKET_NAME = $path
+BUCKET_NAME = "$path"
 ```
 
 You must also configure `B2_APPLICATION_KEY` as a [secret](https://blog.cloudflare.com/workers-secrets-environment/):
