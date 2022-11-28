@@ -39,8 +39,8 @@ async function handleRequest(event, client) {
     // Split the path into segments
     const pathSegments = path.split('/');
     // Now see if it's a list bucket request
-    if ((BUCKET_IN_PATH && pathSegments[0].length < 2) // https://endpoint/bucket-name/
-        || (!BUCKET_IN_PATH && path.length === 0)) {   // https://bucket-name.endpoint/
+    if ((BUCKET_NAME === "$path" && pathSegments[0].length < 2) // https://endpoint/bucket-name/
+        || (BUCKET_NAME !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
         return new Response(null, {
             status: 404,
             statusText: "Not Found"
@@ -48,9 +48,21 @@ async function handleRequest(event, client) {
     }
 
     // Set upstream target hostname.
-    url.hostname = BUCKET_IN_PATH
-        ? AWS_S3_ENDPOINT
-        : url.hostname.split('.')[0] + '.' + AWS_S3_ENDPOINT;
+    switch (BUCKET_NAME) {
+        case "$path":
+            // Bucket name is initial segment of URL path
+            url.hostname = B2_ENDPOINT;
+            break;
+            break;
+        case "$host":
+            // Bucket name is initial subdomain of the incoming hostname
+            url.hostname = url.hostname.split('.')[0] + '.' + B2_ENDPOINT;
+            break;
+        default:
+            // Bucket name is specified in the BUCKET_NAME variable
+            url.hostname = BUCKET_NAME + "." + B2_ENDPOINT;
+            break;
+    }
 
     // Certain headers, such as x-real-ip, appear in the incoming request but
     // are removed from the outgoing request. If they are in the outgoing
@@ -71,12 +83,12 @@ async function handleRequest(event, client) {
 
 // Extract the region from the endpoint
 const endpointRegex = /^s3\.([a-zA-Z0-9-]+)\.backblazeb2\.com$/;
-const [ , aws_region] = AWS_S3_ENDPOINT.match(endpointRegex);
+const [ , aws_region] = B2_ENDPOINT.match(endpointRegex);
 
 // Create an S3 API client that can sign the outgoing request
 const client = new AwsClient({
-    "accessKeyId": AWS_ACCESS_KEY_ID,
-    "secretAccessKey": AWS_SECRET_ACCESS_KEY,
+    "accessKeyId": B2_APPLICATION_KEY_ID,
+    "secretAccessKey": B2_APPLICATION_KEY,
     "service": "s3",
     "region": aws_region,
 });

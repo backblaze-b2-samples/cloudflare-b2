@@ -6,39 +6,38 @@ Informal testing suggests that there is negligible performance overhead imposed 
 
 ## Configuration
 
-You must configure `AWS_ACCESS_KEY_ID`, `AWS_S3_ENDPOINT` and `BUCKET_IN_PATH` in `wrangler.toml`.
+You must configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME` in `wrangler.toml`.
 
 ```toml
 [vars]
-AWS_ACCESS_KEY_ID = "<your b2 application key id>"
-AWS_S3_ENDPOINT = "<your S3 endpoint - e.g. s3.us-west-001.backblazeb2.com >"
-# set BUCKET_IN_PATH to true, if clients pass the bucket name in the URL path, false otherwise
-BUCKET_IN_PATH = true
+B2_APPLICATION_KEY_ID = "<your b2 application key id>"
+B2_ENDPOINT = "<your S3 endpoint - e.g. s3.us-west-001.backblazeb2.com >"
+# Set BUCKET_NAME to:
+#   "A Backblaze B2 bucket name" - direct all requests to the specified bucket
+#   "$path" - use the initial segment in the incoming URL path as the bucket name
+#           e.g. https://images.example.com/bucket-name/path/to/object.png
+#   "$host" - use the initial subdomain in the hostname as the bucket name
+#           e.g. https://bucket-name.images.example.com/path/to/object.png
+BUCKET_NAME = $path
 ```
 
-You must also configure `AWS_SECRET_ACCESS_KEY` as a [secret](https://blog.cloudflare.com/workers-secrets-environment/):
+You must also configure `B2_APPLICATION_KEY` as a [secret](https://blog.cloudflare.com/workers-secrets-environment/):
 
 ```bash
-echo "<your b2 application key>" | wrangler secret put AWS_SECRET_ACCESS_KEY
+echo "<your b2 application key>" | wrangler secret put B2_APPLICATION_KEY
 ```
 
 ### Passing the Bucket Name
 
-Set `BUCKET_IN_PATH` to `true` if clients will pass the bucket name in the URL path, for example:
+Set `BUCKET_NAME` to:
 
-```text
-https://my.domain.com/my-bucket/path/to/file.png
-```
+* A Backblaze B2 bucket name, such as `my-bucket`, to direct all incoming requests to the specified bucket.
+* `$path` to use the initial segment in the incoming URL path as the bucket name, e.g. `https://my.domain.com/my-bucket/path/to/file.png`
+* `$host` to use the initial subdomain in the incoming URL hostname as the bucket name, e.g. `https://my-bucket.my.domain.com/path/to/file.png`
 
-In this configuration, you need only route `my.domain.com` to the worker. All buckets accessible by the application key will be available to clients.
+If you are using the default `*.workers.dev` subdomain, you must either specify a bucket name in the configuration, or set `BUCKET_NAME` to `$path` and pass the bucket name in the path.
 
-Set `BUCKET_IN_PATH` to `false` if clients will pass the bucket name as a subdomain, for example:
-
-```text
-https://my-bucket.my.domain.com/path/to/file.png
-```
-
-Note that, in this configuration, you must configure a [Route](https://developers.cloudflare.com/workers/platform/triggers/routes) or a [Custom Domain](https://developers.cloudflare.com/workers/platform/triggers/custom-domains/) for each bucket name. You **cannot** simply route `*.my.domain.com/*` to your worker. 
+Note that, if you use the `$host` configuration, you must configure a [Route](https://developers.cloudflare.com/workers/platform/triggers/routes) or a [Custom Domain](https://developers.cloudflare.com/workers/platform/triggers/custom-domains/) for each bucket name. You **cannot** simply route `*.my.domain.com/*` to your worker. 
 
 ## Wrangler
 
