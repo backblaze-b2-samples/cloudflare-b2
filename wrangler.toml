@@ -10,6 +10,11 @@ main = "index.js"
 # echo "<your b2 application key>" | wrangler secret put AWS_SECRET_ACCESS_KEY
 [vars]
 AWS_ACCESS_KEY_ID = "<your b2 application key id>"
-AWS_S3_ENDPOINT = "<your S3 endpoint - e.g. s3.us-west-001.backblazeb2.com >"
-# set BUCKET_IN_PATH to true, if clients pass the bucket name in the URL path, false otherwise
-BUCKET_IN_PATH = true
+AWS_S3_ENDPOINT = "<your endpoint - e.g. s3.us-west-001.backblazeb2.com >"
+# Set BUCKET_NAME to:
+#   "A Backblaze B2 bucket name" - direct all requests to the specified bucket
+#   "$path" - use the initial segment in the incoming URL path as the bucket name
+#           e.g. https://images.example.com/bucket-name/path/to/object.png
+#   "$host" - use the initial subdomain in the hostname as the bucket name
+#           e.g. https://bucket-name.images.example.com/path/to/object.png
+BUCKET_NAME = "<your bucket name, $path, or $host>"
