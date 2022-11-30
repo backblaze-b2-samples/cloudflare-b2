@@ -38,13 +38,16 @@ async function handleRequest(event, client) {
     path = path.replace(/\/$/, '');
     // Split the path into segments
     const pathSegments = path.split('/');
-    // Now see if it's a list bucket request
-    if ((BUCKET_NAME === "$path" && pathSegments[0].length < 2) // https://endpoint/bucket-name/
-        || (BUCKET_NAME !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
-        return new Response(null, {
-            status: 404,
-            statusText: "Not Found"
-        });
+
+    if (ALLOW_LIST_BUCKET !== "true") {
+        // Don't allow list bucket requests
+        if ((BUCKET_NAME === "$path" && pathSegments[0].length < 2) // https://endpoint/bucket-name/
+            || (BUCKET_NAME !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
+            return new Response(null, {
+                status: 404,
+                statusText: "Not Found"
+            });
+        }
     }
 
     // Set upstream target hostname.

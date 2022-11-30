@@ -19,6 +19,10 @@ B2_ENDPOINT = "<your S3 endpoint - e.g. s3.us-west-001.backblazeb2.com >"
 #   "$host" - use the initial subdomain in the hostname as the bucket name
 #           e.g. https://bucket-name.images.example.com/path/to/object.png
 BUCKET_NAME = "$path"
+# Backblaze B2 buckets with public-read visibility do not allow anonymous clients
+# to list the bucket’s objects. You can allow or deny this functionality in the
+# Worker via ALLOW_LIST_BUCKET
+ALLOW_LIST_BUCKET = "<true, if you want to allow clients to list objects, otherwise false>"
 ```
 
 You must also configure `B2_APPLICATION_KEY` as a [secret](https://blog.cloudflare.com/workers-secrets-environment/):
