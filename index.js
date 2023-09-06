@@ -30,8 +30,6 @@ async function handleRequest(event, client) {
 
     const url = new URL(request.url);
 
-    // Don't allow clients to list the bucket contents!
-    //
     // Remove leading slashes from path
     let path = url.pathname.replace(/^\//, '');
     // Remove trailing slashes
@@ -41,7 +39,7 @@ async function handleRequest(event, client) {
 
     if (ALLOW_LIST_BUCKET !== "true") {
         // Don't allow list bucket requests
-        if ((BUCKET_NAME === "$path" && pathSegments[0].length < 2) // https://endpoint/bucket-name/
+        if ((BUCKET_NAME === "$path" && pathSegments.length < 2) // https://endpoint/bucket-name/
             || (BUCKET_NAME !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
             return new Response(null, {
                 status: 404,
@@ -55,7 +53,6 @@ async function handleRequest(event, client) {
         case "$path":
             // Bucket name is initial segment of URL path
             url.hostname = B2_ENDPOINT;
-            break;
             break;
         case "$host":
             // Bucket name is initial subdomain of the incoming hostname
