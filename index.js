@@ -11,10 +11,13 @@ const UNSIGNABLE_HEADERS = [
     'x-real-ip',
 ]
 
+// How many times to retry a range request where the response is missing content-range
+const RANGE_RETRY_ATTEMPTS = 3;
+
 // Filter out cf-* and any other headers we don't want to include in the signature
 function filterHeaders(headers) {
-    return Array.from(headers.entries())
-      .filter(pair => !UNSIGNABLE_HEADERS.includes(pair[0]) && !pair[0].startsWith('cf-'));
+    return new Headers(Array.from(headers.entries())
+      .filter(pair => !UNSIGNABLE_HEADERS.includes(pair[0]) && !pair[0].startsWith('cf-')));
 }
 
 async function handleRequest(event, client) {
@@ -72,9 +75,44 @@ async function handleRequest(event, client) {
     // Sign the outgoing request
     const signedRequest = await client.sign(url.toString(), {
         method: request.method,
-        headers: headers,
-        body: request.body
+        headers: headers
     });
+
+    // For large files, Cloudflare will return the entire file, rather than the requested range
+    // So, if there is a range header in the request, check that the response contains the
+    // content-range header. If not, abort the request and try again.
+    // See https://community.cloudflare.com/t/cloudflare-worker-fetch-ignores-byte-request-range-on-initial-request/395047/4
+    if (signedRequest.headers.has("range")) {
+        let attempts = RANGE_RETRY_ATTEMPTS;
+        let response;
+        do {
+            let controller = new AbortController();
+            response = await fetch(signedRequest.url, {
+                method: signedRequest.method,
+                headers: signedRequest.headers,
+                signal: controller.signal,
+            });
+            if (response.headers.has("content-range")) {
+                // Only log if it didn't work first time
+                if (attempts < RANGE_RETRY_ATTEMPTS) {
+                    console.log(`Retry for ${signedRequest.url} succeeded - response has content-range header`);
+                }
+                // Break out of loop and return the response
+                break;
+            } else {
+                attempts -= 1;
+                console.error(`Range header in request for ${signedRequest.url} but no content-range header in response. Will retry ${attempts} more times`);
+                controller.abort();
+            }
+        } while (response.ok && attempts > 0);
+
+        if (attempts < 0) {
+            console.error(`Tried range request for ${signedRequest.url} ${RANGE_RETRY_ATTEMPTS} times, but no content-range in response.`);
+        }
+
+        // Return whatever response we have rather than an error response
+        return response;
+    }
 
     // Send the signed request to B2, returning the upstream response
     return fetch(signedRequest);

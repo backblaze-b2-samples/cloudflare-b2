@@ -14,6 +14,7 @@
     "prettier": "^2.7.1"
   },
   "dependencies": {
-    "aws4fetch": "^1.0.17"
+    "aws4fetch": "^1.0.17",
+    "wrangler": "^3.7.0"
   }
 }

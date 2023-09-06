@@ -55,6 +55,14 @@ wrangler generate projectname https://github.com/backblaze-b2-samples/cloudflare
 
 To deploy using serverless add a [`serverless.yml`](https://serverless.com/framework/docs/providers/cloudflare/) file.
 
+## Range Requests
+
+When the worker forwards a range request for a large file (bigger than about 2 GB), Cloudflare may return
+the entire file, rather than the requested range. The worker includes logic adapted from
+[this Cloudflare Community reply](https://community.cloudflare.com/t/cloudflare-worker-fetch-ignores-byte-request-range-on-initial-request/395047/4)
+by [julian.cox](https://community.cloudflare.com/u/julian.cox) to abort and retry the request if the response to a 
+range request does not contain the content-range header. 
+
 ## Acknowledgements
 
 Based on [https://github.com/obezuk/worker-signed-s3-template](https://github.com/obezuk/worker-signed-s3-template)
