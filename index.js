@@ -9,7 +9,11 @@ import { AwsClient } from 'aws4fetch'
 const UNSIGNABLE_HEADERS = [
     'x-forwarded-proto',
     'x-real-ip',
-]
+];
+
+// URL needs colon suffix on protocol, and port as a string
+const HTTPS_PROTOCOL = "https:";
+const HTTPS_PORT = "443";
 
 // How many times to retry a range request where the response is missing content-range
 const RANGE_RETRY_ATTEMPTS = 3;
@@ -32,6 +36,12 @@ async function handleRequest(event, client) {
     }
 
     const url = new URL(request.url);
+
+    // Incoming protocol and port is taken from the worker's environment.
+    // Local dev mode uses plain http on 8787, and it's possible to deploy
+    // a worker on plain http. B2 only supports https on 443
+    url.protocol = HTTPS_PROTOCOL;
+    url.port = HTTPS_PORT;
 
     // Remove leading slashes from path
     let path = url.pathname.replace(/^\//, '');

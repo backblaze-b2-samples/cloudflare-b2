@@ -31,6 +31,18 @@ You must also configure `B2_APPLICATION_KEY` as a [secret](https://blog.cloudfla
 echo "<your b2 application key>" | wrangler secret put B2_APPLICATION_KEY
 ```
 
+### Running in Wrangler's Local Server
+
+Wrangler's local server loads configuration from `wrangler.toml`, but cannot access secrets. Instead, the local server
+loads additional configuration from `.dev.vars`.
+
+Copy `.dev.vars.template` to `.dev.vars` and configure `B2_APPLICATION_KEY`:
+
+````toml
+# Configuration for running the app in local dev mode
+B2_APPLICATION_KEY = "<your b2 application key>"
+````
+
 ### Passing the Bucket Name
 
 Set `BUCKET_NAME` to:

@@ -1,0 +1,2 @@
+# Configuration for running the app in local dev mode
+B2_APPLICATION_KEY = "<your b2 application key>"
