@@ -96,11 +96,9 @@ async function handleRequest(event, client) {
         let attempts = RANGE_RETRY_ATTEMPTS;
         let response;
         do {
-            let controller = new AbortController();
             response = await fetch(signedRequest.url, {
                 method: signedRequest.method,
                 headers: signedRequest.headers,
-                signal: controller.signal,
             });
             if (response.headers.has("content-range")) {
                 // Only log if it didn't work first time
@@ -109,10 +107,13 @@ async function handleRequest(event, client) {
                 }
                 // Break out of loop and return the response
                 break;
+            } else if (response.status === 416) {
+                // Range request is invalid.
+                console.log(`Range request for ${signedRequest.url} is invalid - response has status 416`);
+                break;
             } else {
                 attempts -= 1;
                 console.error(`Range header in request for ${signedRequest.url} but no content-range header in response. Will retry ${attempts} more times`);
-                controller.abort();
             }
         } while (response.ok && attempts > 0);
 
