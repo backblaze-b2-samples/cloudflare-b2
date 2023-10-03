@@ -109,18 +109,25 @@ async function handleRequest(event, client) {
                 }
                 // Break out of loop and return the response
                 break;
-            } else {
+            } else if (response.ok) {
                 attempts -= 1;
                 console.error(`Range header in request for ${signedRequest.url} but no content-range header in response. Will retry ${attempts} more times`);
-                controller.abort();
+                // Do not abort on the last attempt, as we want to return the response
+                if (attempts > 0) {
+                    controller.abort();
+                }
+            } else {
+                // Response is not ok, so don't retry
+                break;
             }
-        } while (response.ok && attempts > 0);
+        } while (attempts > 0);
 
-        if (attempts < 0) {
+        if (attempts <= 0) {
             console.error(`Tried range request for ${signedRequest.url} ${RANGE_RETRY_ATTEMPTS} times, but no content-range in response.`);
         }
 
         // Return whatever response we have rather than an error response
+        // This response cannot be aborted, otherwise it will raise an exception
         return response;
     }
 
