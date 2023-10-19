@@ -9,6 +9,7 @@ import { AwsClient } from 'aws4fetch'
 const UNSIGNABLE_HEADERS = [
     'x-forwarded-proto',
     'x-real-ip',
+    'accept-encoding', // Do not set accept-encoding on behalf of cloudflare
 ];
 
 // URL needs colon suffix on protocol, and port as a string
