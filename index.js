@@ -5,11 +5,15 @@
 //
 import { AwsClient } from 'aws4fetch'
 
-// These headers appear in the request, but are not passed upstream
 const UNSIGNABLE_HEADERS = [
+    // These headers appear in the request, but are not passed upstream
     'x-forwarded-proto',
     'x-real-ip',
-    'accept-encoding', // Do not set accept-encoding on behalf of cloudflare
+    // We can't include accept-encoding in the signature because Cloudflare
+    // sets the incoming accept-encoding header to "gzip, br", then modifies
+    // the outgoing request to set accept-encoding to "gzip".
+    // Not cool, Cloudflare!
+    'accept-encoding',
 ];
 
 // URL needs colon suffix on protocol, and port as a string
