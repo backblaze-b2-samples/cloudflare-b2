@@ -6,7 +6,7 @@ Informal testing suggests that there is negligible performance overhead imposed 
 
 ## Configuration
 
-You must configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME` in `wrangler.toml`.
+Copy `wrangler.toml.template` to `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2.
 
 ```toml
 [vars]
@@ -23,6 +23,35 @@ BUCKET_NAME = "$path"
 # to list the bucket’s objects. You can allow or deny this functionality in the
 # Worker via ALLOW_LIST_BUCKET
 ALLOW_LIST_BUCKET = "<true, if you want to allow clients to list objects, otherwise false>"
+# If set, these headers will be included in the signed upstream request
+# alongside the minimal set of headers required for an AWS v4 signature:
+# "authorization", "x-amz-content-sha256" and "x-amz-date".
+#
+# Note that, if "x-amz-content-sha256" is not included in ALLOWED_HEADERS, then
+# any value supplied in the incoming request is discarded and
+# "x-amz-content-sha256" will be set to "UNSIGNED-PAYLOAD".
+#
+# If you set ALLOWED_HEADERS, it is your responsibility to ensure that the
+# list of headers that you specify supports the functionality that your client
+# apps use, for example, "range". The list below is a suggested starting point.
+#
+# Note that HTTP headers are not case-sensitive. "host" will match "host",
+# "Host" and "HOST".
+#ALLOWED_HEADERS = [
+#    "content-type",
+#    "date",
+#    "host",
+#    "if-match",
+#    "if-modified-since",
+#    "if-none-match",
+#    "if-unmodified-since",
+#    "range",
+#    "x-amz-content-sha256",
+#    "x-amz-date",
+#    "x-amz-server-side-encryption-customer-algorithm",
+#    "x-amz-server-side-encryption-customer-key",
+#    "x-amz-server-side-encryption-customer-key-md5"
+#]
 ```
 
 You must also configure `B2_APPLICATION_KEY` as a [secret](https://blog.cloudflare.com/workers-secrets-environment/):
@@ -55,6 +84,37 @@ If you are using the default `*.workers.dev` subdomain, you must either specify 
 
 Note that, if you use the `$host` configuration, you must configure a [Route](https://developers.cloudflare.com/workers/platform/triggers/routes) or a [Custom Domain](https://developers.cloudflare.com/workers/platform/triggers/custom-domains/) for each bucket name. You **cannot** simply route `*.my.domain.com/*` to your worker. 
 
+### Restricting Signed HTTP Headers in the Upstream Request
+
+By default, all HTTP headers in the downstream request from the client are signed and included in the upstream request to Backlaze B2, except the following:
+
+* Cloudflare headers with the prefix `cf-`, plus `x-forwarded-proto` and `x-real-ip`: these are set in the downstream request by Cloudflare, rather than by the client. In addition, `x-real-ip` is removed from the upstream request.
+* `accept-encoding`: No matter what the client passes, Cloudflare sets `accept-encoding` in the incoming request to `gzip, br` and then modifies the outgoing request, setting `accept-encoding` to `gzip`. This breaks the AWS v4 signature.
+
+If you wish to further restrict the set of headers that will be signed and included, you can configure `ALLOWED_HEADERS` in `wrangler.toml`. If `ALLOWED_HEADERS` is set, then the listed  headers will be included in the signed upstream request alongside the minimal set of headers required for an AWS v4 signature: `authorization`, `x-amz-content-sha256` and `x-amz-date`.
+
+Note that, if `x-amz-content-sha256` is not included in `ALLOWED_HEADERS`, then any value supplied in the incoming request will be discarded and `x-amz-content-sha256` will be set to `UNSIGNED-PAYLOAD` in the outgoing request.
+
+If you do set `ALLOWED_HEADERS`, it is your responsibility to ensure that the list of headers that you specify supports the functionality that your client apps use, for example, `range` for [HTTP range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests). The list below, the HTTP headers listed in the [AWS S3 GetObject documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html) currently supported by Backblaze B2, is a suggested starting point:
+
+ALLOWED_HEADERS = [
+    "content-type",
+    "date",
+    "host",
+    "if-match",
+    "if-modified-since",
+    "if-none-match",
+    "if-unmodified-since",
+    "range",
+    "x-amz-content-sha256",
+    "x-amz-date",
+    "x-amz-server-side-encryption-customer-algorithm",
+    "x-amz-server-side-encryption-customer-key",
+    "x-amz-server-side-encryption-customer-key-md5"
+]
+
+Note that HTTP headers are not case-sensitive. `host` will match `host`, `Host` and `HOST`.
+
 ## Wrangler
 
 You can use this repository as a template for your own worker using [`wrangler`](https://github.com/cloudflare/wrangler):
@@ -69,11 +129,7 @@ To deploy using serverless add a [`serverless.yml`](https://serverless.com/frame
 
 ## Range Requests
 
-When the worker forwards a range request for a large file (bigger than about 2 GB), Cloudflare may return
-the entire file, rather than the requested range. The worker includes logic adapted from
-[this Cloudflare Community reply](https://community.cloudflare.com/t/cloudflare-worker-fetch-ignores-byte-request-range-on-initial-request/395047/4)
-by [julian.cox](https://community.cloudflare.com/u/julian.cox) to abort and retry the request if the response to a 
-range request does not contain the content-range header. 
+When the worker forwards a range request for a large file (bigger than about 2 GB), Cloudflare may return the entire file, rather than the requested range. The worker includes logic adapted from [this Cloudflare Community reply](https://community.cloudflare.com/t/cloudflare-worker-fetch-ignores-byte-request-range-on-initial-request/395047/4) by [julian.cox](https://community.cloudflare.com/u/julian.cox) to abort and retry the request if the response to a range request does not contain the content-range header. 
 
 ## Acknowledgements
 
