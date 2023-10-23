@@ -24,9 +24,13 @@ const HTTPS_PORT = "443";
 const RANGE_RETRY_ATTEMPTS = 3;
 
 // Filter out cf-* and any other headers we don't want to include in the signature
-function filterHeaders(headers) {
+function filterHeaders(headers, env) {
     return new Headers(Array.from(headers.entries())
-      .filter(pair => !UNSIGNABLE_HEADERS.includes(pair[0]) && !pair[0].startsWith('cf-')));
+        .filter(pair =>
+            !UNSIGNABLE_HEADERS.includes(pair[0])
+            && !pair[0].startsWith('cf-')
+            && !('ALLOWED_HEADERS' in env && !env.ALLOWED_HEADERS.includes(pair[0]))
+        ));
 }
 
 export default {
