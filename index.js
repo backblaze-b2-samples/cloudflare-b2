@@ -88,7 +88,7 @@ export default {
         // Certain headers, such as x-real-ip, appear in the incoming request but
         // are removed from the outgoing request. If they are in the outgoing
         // signed headers, B2 can't validate the signature.
-        const headers = filterHeaders(request.headers);
+        const headers = filterHeaders(request.headers, env);
 
         // Extract the region from the endpoint
         const endpointRegex = /^s3\.([a-zA-Z0-9-]+)\.backblazeb2\.com$/;
