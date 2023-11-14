@@ -4,7 +4,7 @@ Provide access to one or more private [Backblaze B2](https://www.backblaze.com/b
 
 Informal testing suggests that there is negligible performance overhead imposed by signing the request.
 
-## Configuration
+## Worker Configuration
 
 Copy `wrangler.toml.template` to `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2.
 
@@ -114,6 +114,16 @@ ALLOWED_HEADERS = [
 ]
 
 Note that HTTP headers are not case-sensitive. `host` will match `host`, `Host` and `HOST`.
+
+## Bucket Configuration
+
+Since the bucket is private, the Cloudflare Worker signs each request to Backblaze B2 using the application key, and includes the signature in the request’s `Authorization` HTTP header. By default, [Cloudflare does not cache content](https://developers.cloudflare.com/cache/concepts/cache-control/#conditions) where the request contains the `Authorization` header, so you must set your bucket’s info to include a cache-control directive.
+
+* Sign in to your Backblaze account.
+* In the left navigation menu under B2 Cloud Storage, click **Buckets**.
+* Locate your bucket in the list and click **Bucket Settings**.
+* Set **Bucket Info** to `{"Cache-Control":"public"}`. If you wish, you can set additional cache-control directives, for example, to direct Cloudflare to cache each file for a day, you would set **Bucket Info** to `{"Cache-Control": "public, max-age=86400"}`.
+* Click **Update Bucket**.
 
 ## Wrangler
 
