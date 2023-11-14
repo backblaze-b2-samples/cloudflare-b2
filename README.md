@@ -122,7 +122,7 @@ Since the bucket is private, the Cloudflare Worker signs each request to Backbla
 * Sign in to your Backblaze account.
 * In the left navigation menu under B2 Cloud Storage, click **Buckets**.
 * Locate your bucket in the list and click **Bucket Settings**.
-* Set **Bucket Info** to `{"Cache-Control":"public"}`. If you wish, you can set additional cache-control directives, for example, to direct Cloudflare to cache each file for a day, you would set **Bucket Info** to `{"Cache-Control": "public, max-age=86400"}`.
+* Set **Bucket Info** to `{"Cache-Control":"public"}`. If you wish, you can set additional [cache-control directives](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#directives), for example, to direct Cloudflare to cache each file for a day, you would set **Bucket Info** to `{"Cache-Control": "public, max-age=86400"}`.
 * Click **Update Bucket**.
 
 ## Wrangler
