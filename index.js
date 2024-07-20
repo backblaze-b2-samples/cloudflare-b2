@@ -25,14 +25,18 @@ const RANGE_RETRY_ATTEMPTS = 3;
 
 // Filter out cf-* and any other headers we don't want to include in the signature
 function filterHeaders(headers, env) {
+    // Suppress irrelevant IntelliJ warning
+    // noinspection JSCheckFunctionSignatures
     return new Headers(Array.from(headers.entries())
         .filter(pair =>
             !UNSIGNABLE_HEADERS.includes(pair[0])
             && !pair[0].startsWith('cf-')
-            && !('ALLOWED_HEADERS' in env && !env.ALLOWED_HEADERS.includes(pair[0]))
+            && !('ALLOWED_HEADERS' in env && !env['ALLOWED_HEADERS'].includes(pair[0]))
         ));
 }
 
+// Supress IntelliJ's "unused default export" warning
+// noinspection JSUnusedGlobalSymbols
 export default {
     async fetch(request, env) {
         // Only allow GET and HEAD methods
@@ -58,10 +62,10 @@ export default {
         // Split the path into segments
         const pathSegments = path.split('/');
 
-        if (env.ALLOW_LIST_BUCKET !== "true") {
+        if (env['ALLOW_LIST_BUCKET'] !== "true") {
             // Don't allow list bucket requests
-            if ((env.BUCKET_NAME === "$path" && pathSegments.length < 2) // https://endpoint/bucket-name/
-                || (env.BUCKET_NAME !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
+            if ((env['BUCKET_NAME'] === "$path" && pathSegments.length < 2) // https://endpoint/bucket-name/
+                || (env['BUCKET_NAME'] !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
                 return new Response(null, {
                     status: 404,
                     statusText: "Not Found"
@@ -70,18 +74,18 @@ export default {
         }
 
         // Set upstream target hostname.
-        switch (env.BUCKET_NAME) {
+        switch (env['BUCKET_NAME']) {
             case "$path":
                 // Bucket name is initial segment of URL path
-                url.hostname = env.B2_ENDPOINT;
+                url.hostname = env['B2_ENDPOINT'];
                 break;
             case "$host":
                 // Bucket name is initial subdomain of the incoming hostname
-                url.hostname = url.hostname.split('.')[0] + '.' + env.B2_ENDPOINT;
+                url.hostname = url.hostname.split('.')[0] + '.' + env['B2_ENDPOINT'];
                 break;
             default:
                 // Bucket name is specified in the BUCKET_NAME variable
-                url.hostname = env.BUCKET_NAME + "." + env.B2_ENDPOINT;
+                url.hostname = env['BUCKET_NAME'] + "." + env['B2_ENDPOINT'];
                 break;
         }
 
@@ -90,21 +94,23 @@ export default {
         // signed headers, B2 can't validate the signature.
         const headers = filterHeaders(request.headers, env);
 
-        // Extract the region from the endpoint
-        const endpointRegex = /^s3\.([a-zA-Z0-9-]+)\.backblazeb2\.com$/;
-        const [ , aws_region] = env.B2_ENDPOINT.match(endpointRegex);
-
         // Create an S3 API client that can sign the outgoing request
         const client = new AwsClient({
-            "accessKeyId": env.B2_APPLICATION_KEY_ID,
-            "secretAccessKey": env.B2_APPLICATION_KEY,
+            "accessKeyId": env['B2_APPLICATION_KEY_ID'],
+            "secretAccessKey": env['B2_APPLICATION_KEY'],
             "service": "s3",
-            "region": aws_region,
         });
 
+        // Save the request method, so we can process responses for HEAD requests appropriately
+        const requestMethod = request.method;
+
         // Sign the outgoing request
+        //
+        // For HEAD requests Cloudflare appears to change the method on the outgoing request to GET (#18), which
+        // breaks the signature, resulting in a 403. So, change all HEADs to GETs. This is not too inefficient,
+        // since we won't read the body of the response if the original request was a HEAD.
         const signedRequest = await client.sign(url.toString(), {
-            method: request.method,
+            method: 'GET',
             headers: headers
         });
 
@@ -151,7 +157,20 @@ export default {
             return response;
         }
 
-        // Send the signed request to B2, returning the upstream response
-        return fetch(signedRequest);
+        // Send the signed request to B2
+        const fetchPromise = fetch(signedRequest);
+
+        if (requestMethod === 'HEAD') {
+            const response = await fetchPromise;
+            // Original request was HEAD, so return a new Response without a body
+            return new Response(null, {
+                headers: response.headers,
+                status: response.status,
+                statusText: response.statusText
+            })
+        }
+
+        // Return the upstream response unchanged
+        return fetchPromise;
     },
 };
