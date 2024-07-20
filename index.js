@@ -90,16 +90,11 @@ export default {
         // signed headers, B2 can't validate the signature.
         const headers = filterHeaders(request.headers, env);
 
-        // Extract the region from the endpoint
-        const endpointRegex = /^s3\.([a-zA-Z0-9-]+)\.backblazeb2\.com$/;
-        const [ , aws_region] = env.B2_ENDPOINT.match(endpointRegex);
-
         // Create an S3 API client that can sign the outgoing request
         const client = new AwsClient({
             "accessKeyId": env.B2_APPLICATION_KEY_ID,
             "secretAccessKey": env.B2_APPLICATION_KEY,
             "service": "s3",
-            "region": aws_region,
         });
 
         // Save the request method, so we can process responses for HEAD requests appropriately
