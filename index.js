@@ -102,9 +102,16 @@ export default {
             "region": aws_region,
         });
 
+        // Save the request method, so we can process responses for HEAD requests appropriately
+        const requestMethod = request.method;
+
         // Sign the outgoing request
+        //
+        // For HEAD requests Cloudflare appears to change the method on the outgoing request to GET (#18), which
+        // breaks the signature, resulting in a 403. So, change all HEADs to GETs. This is not too inefficient,
+        // since we won't read the body of the response if the original request was a HEAD.
         const signedRequest = await client.sign(url.toString(), {
-            method: request.method,
+            method: 'GET',
             headers: headers
         });
 
@@ -151,7 +158,20 @@ export default {
             return response;
         }
 
-        // Send the signed request to B2, returning the upstream response
-        return fetch(signedRequest);
+        // Send the signed request to B2
+        const fetchPromise = fetch(signedRequest);
+
+        if (requestMethod === 'HEAD') {
+            const response = await fetchPromise;
+            // Original request was HEAD, so return a new Response without a body
+            return new Response(null, {
+                headers: response.headers,
+                status: response.status,
+                statusText: response.statusText
+            })
+        }
+
+        // Return the upstream response unchanged
+        return fetchPromise;
     },
 };
