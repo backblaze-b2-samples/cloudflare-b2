@@ -35,6 +35,14 @@ function filterHeaders(headers, env) {
         ));
 }
 
+function createHeadResponse(response) {
+    return new Response(null, {
+        headers: response.headers,
+        status: response.status,
+        statusText: response.statusText
+    });
+}
+
 // Supress IntelliJ's "unused default export" warning
 // noinspection JSUnusedGlobalSymbols
 export default {
@@ -152,6 +160,11 @@ export default {
                 console.error(`Tried range request for ${signedRequest.url} ${RANGE_RETRY_ATTEMPTS} times, but no content-range in response.`);
             }
 
+            if (requestMethod === 'HEAD') {
+                // Original request was HEAD, so return a new Response without a body
+                return createHeadResponse(response);
+            }
+
             // Return whatever response we have rather than an error response
             // This response cannot be aborted, otherwise it will raise an exception
             return response;
@@ -163,11 +176,7 @@ export default {
         if (requestMethod === 'HEAD') {
             const response = await fetchPromise;
             // Original request was HEAD, so return a new Response without a body
-            return new Response(null, {
-                headers: response.headers,
-                status: response.status,
-                statusText: response.statusText
-            })
+            return createHeadResponse(response);
         }
 
         // Return the upstream response unchanged
