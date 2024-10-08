@@ -4,6 +4,19 @@ Provide access to one or more private [Backblaze B2](https://www.backblaze.com/b
 
 Informal testing suggests that there is negligible performance overhead imposed by signing the request.
 
+## Download the Source Code
+
+```shell
+git clone git@github.com:backblaze-b2-samples/cloudflare-b2.git
+cd cloudflare-b2
+```
+
+You must also install dependencies before you can deploy or publish the worker:
+
+```shell
+npm install
+```
+
 ## Worker Configuration
 
 Copy `wrangler.toml.template` to `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2.
