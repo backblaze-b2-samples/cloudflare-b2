@@ -43,6 +43,13 @@ function createHeadResponse(response) {
     });
 }
 
+function isListBucketRequest(env, path) {
+    const pathSegments = path.split('/');
+
+    return (env['BUCKET_NAME'] === "$path" && pathSegments.length < 2) // https://endpoint/bucket-name/
+        || (env['BUCKET_NAME'] !== "$path" && path.length === 0); // https://bucket-name.endpoint/ or https://endpoint/
+}
+
 // Supress IntelliJ's "unused default export" warning
 // noinspection JSUnusedGlobalSymbols
 export default {
@@ -67,23 +74,29 @@ export default {
         let path = url.pathname.replace(/^\//, '');
         // Remove trailing slashes
         path = path.replace(/\/$/, '');
-        // Split the path into segments
-        const pathSegments = path.split('/');
 
-        if (env['ALLOW_LIST_BUCKET'] !== "true") {
-            // Don't allow list bucket requests
-            if ((env['BUCKET_NAME'] === "$path" && pathSegments.length < 2) // https://endpoint/bucket-name/
-                || (env['BUCKET_NAME'] !== "$path" && path.length === 0)) {   // https://bucket-name.endpoint/ or https://endpoint/
-                return new Response(null, {
-                    status: 404,
-                    statusText: "Not Found"
-                });
-            }
+        // Reject list bucket requests unless configuration allows it
+        if (isListBucketRequest(env, path) && String(env['ALLOW_LIST_BUCKET']) !== "true") {
+            return new Response(null, {
+                status: 404,
+                statusText: "Not Found"
+            });
         }
+
+        // Set RCLONE_DOWNLOAD to "true" to use rclone with --b2-download-url
+        // See https://rclone.org/b2/#b2-download-url
+        const rcloneDownload = String(env["RCLONE_DOWNLOAD"]) === 'true';
 
         // Set upstream target hostname.
         switch (env['BUCKET_NAME']) {
             case "$path":
+                // It doesn't make sense for the bucket name to be in the path if we're
+                // proxying Rclone downloads!
+                if (rcloneDownload) {
+                    return new Response("Check Worker configuration: RCLONE_DOWNLOAD is not compatible with BUCKET_NAME=$path\n",{
+                       status: 500
+                    });
+                }
                 // Bucket name is initial segment of URL path
                 url.hostname = env['B2_ENDPOINT'];
                 break;
@@ -111,6 +124,11 @@ export default {
 
         // Save the request method, so we can process responses for HEAD requests appropriately
         const requestMethod = request.method;
+
+        if (rcloneDownload) {
+            // Remove leading file/ prefix from the path
+            url.pathname = path.replace(/^file\//, "")
+        }
 
         // Sign the outgoing request
         //

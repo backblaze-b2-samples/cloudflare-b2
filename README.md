@@ -19,7 +19,7 @@ npm install
 
 ## Worker Configuration
 
-Copy `wrangler.toml.template` to `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2.
+Copy `wrangler.toml.template` to `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2, and `RCLONE_DOWNLOAD` to use the worker with rclone's `--b2-download-url` option.
 
 ```toml
 [vars]
@@ -50,6 +50,9 @@ ALLOW_LIST_BUCKET = "<true, if you want to allow clients to list objects, otherw
 #
 # Note that HTTP headers are not case-sensitive. "host" will match "host",
 # "Host" and "HOST".
+RCLONE_DOWNLOAD = "<true, if you are using the Worker to proxy downloads for rclone, otherwise false>"
+# If set, the worker will strip the `file/` prefix from incoming request paths.
+# See https://rclone.org/b2/#b2-download-url
 #ALLOWED_HEADERS = [
 #    "content-type",
 #    "date",
@@ -110,6 +113,7 @@ Note that, if `x-amz-content-sha256` is not included in `ALLOWED_HEADERS`, then 
 
 If you do set `ALLOWED_HEADERS`, it is your responsibility to ensure that the list of headers that you specify supports the functionality that your client apps use, for example, `range` for [HTTP range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests). The list below, the HTTP headers listed in the [AWS S3 GetObject documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html) currently supported by Backblaze B2, is a suggested starting point:
 
+```
 ALLOWED_HEADERS = [
     "content-type",
     "date",
@@ -125,8 +129,21 @@ ALLOWED_HEADERS = [
     "x-amz-server-side-encryption-customer-key",
     "x-amz-server-side-encryption-customer-key-md5"
 ]
+```
 
 Note that HTTP headers are not case-sensitive. `host` will match `host`, `Host` and `HOST`.
+
+## Rclone Custom Endpoint for Downloads
+
+[Rclone's B2 integration](https://rclone.org/b2/) includes an option to specify a custom endpoint for downloads: [`--b2-download-url`](https://rclone.org/b2/#b2-download-url). Given such a custom endpoint, rather than reading files directly via the B2 Native API, Rclone reads them from that endpoint.
+
+If you wish to use the Rclone custom endpoint feature with this Worker, you must set the `RCLONE_DOWNLOAD` environment variable to `true` in `wrangler.toml` or the Cloudflare Dashboard:
+
+```toml
+RCLONE_DOWNLOAD = "true"
+```
+
+Rclone assumes that the Cloudflare endpoint is proxying the B2 Native API, which supports "friendly" download URLs of the form `https://f000.backblazeb2.com/file/bucket-name/path/to/file.txt`. So, given the custom endpoint `https://mysubdomain.mydomain.tld`, Rclone requests a URL such as `https://mysubdomain.mydomain.tld/file/bucket-name/path/to/file.txt`.
 
 ## Bucket Configuration
 
