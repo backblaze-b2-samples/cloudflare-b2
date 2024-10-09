@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Dry Run
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dry Run
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          preCommands: cp wrangler.toml.template wrangler.toml
+          command: deploy --dry-run
