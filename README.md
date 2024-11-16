@@ -36,6 +36,9 @@ BUCKET_NAME = "$path"
 # to list the bucket’s objects. You can allow or deny this functionality in the
 # Worker via ALLOW_LIST_BUCKET
 ALLOW_LIST_BUCKET = "<true, if you want to allow clients to list objects, otherwise false>"
+# If set, the worker will strip the `file/` prefix from incoming request paths.
+# See https://rclone.org/b2/#b2-download-url
+RCLONE_DOWNLOAD = "<true, if you are using the Worker to proxy downloads for rclone, otherwise false>"
 # If set, these headers will be included in the signed upstream request
 # alongside the minimal set of headers required for an AWS v4 signature:
 # "authorization", "x-amz-content-sha256" and "x-amz-date".
@@ -50,9 +53,6 @@ ALLOW_LIST_BUCKET = "<true, if you want to allow clients to list objects, otherw
 #
 # Note that HTTP headers are not case-sensitive. "host" will match "host",
 # "Host" and "HOST".
-RCLONE_DOWNLOAD = "<true, if you are using the Worker to proxy downloads for rclone, otherwise false>"
-# If set, the worker will strip the `file/` prefix from incoming request paths.
-# See https://rclone.org/b2/#b2-download-url
 #ALLOWED_HEADERS = [
 #    "content-type",
 #    "date",
