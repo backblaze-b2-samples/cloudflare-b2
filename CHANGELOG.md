@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Nothing at present
+- Fixed comments around RCLONE_DOWNLOAD in wrangler.toml.template ([@jingyuanliang](https://github.com/jingyuanliang/))
 
 ## [1.2.0] - 2024-10-09
 
