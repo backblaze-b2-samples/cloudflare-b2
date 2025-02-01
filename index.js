@@ -97,13 +97,6 @@ export default {
         // Set upstream target hostname.
         switch (env['BUCKET_NAME']) {
             case "$path":
-                // It doesn't make sense for the bucket name to be in the path if we're
-                // proxying Rclone downloads!
-                if (rcloneDownload) {
-                    return new Response("Check Worker configuration: RCLONE_DOWNLOAD is not compatible with BUCKET_NAME=$path\n",{
-                       status: 500
-                    });
-                }
                 // Bucket name is initial segment of URL path
                 url.hostname = env['B2_ENDPOINT'];
                 break;
@@ -132,9 +125,14 @@ export default {
         // Save the request method, so we can process responses for HEAD requests appropriately
         const requestMethod = request.method;
 
-        if (rcloneDownload) {
-            // Remove leading file/ prefix from the path
-            url.pathname = path.replace(/^file\//, "")
+        if (rcloneDownload && request.headers.get('user-agent')?.includes('rclone')) {
+            if (env['BUCKET_NAME'] === "$path") {
+                // Remove leading file/ prefix from the path
+                url.pathname = path.replace(/^file\//, "");
+            } else {
+                // Remove leading file/{bucket_name}/ prefix from the path 
+                url.pathname = path.replace(/^file\/[^/]+\//, "");
+            }            
         }
 
         // Sign the outgoing request
