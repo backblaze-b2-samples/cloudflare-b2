@@ -14,6 +14,8 @@ const UNSIGNABLE_HEADERS = [
     // the outgoing request to set accept-encoding to "gzip".
     // Not cool, Cloudflare!
     'accept-encoding',
+    // Not consistently passed upstream, causing flaky errors
+    'if-modified-since',
 ];
 
 // URL needs colon suffix on protocol, and port as a string
