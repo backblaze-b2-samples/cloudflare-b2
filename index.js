@@ -6,7 +6,7 @@
 import { AwsClient } from 'aws4fetch'
 
 const UNSIGNABLE_HEADERS = [
-    // These headers appear in the request, but are not passed upstream
+    // These headers appear in the request, but are never passed upstream
     'x-forwarded-proto',
     'x-real-ip',
     // We can't include accept-encoding in the signature because Cloudflare
@@ -14,8 +14,12 @@ const UNSIGNABLE_HEADERS = [
     // the outgoing request to set accept-encoding to "gzip".
     // Not cool, Cloudflare!
     'accept-encoding',
-    // Not consistently passed upstream, causing flaky errors
+    // Conditional headers are not consistently passed upstream
+    'if-match',
     'if-modified-since',
+    'if-none-match',
+    'if-range',
+    'if-unmodified-since',
 ];
 
 // URL needs colon suffix on protocol, and port as a string
@@ -30,11 +34,12 @@ function filterHeaders(headers, env) {
     // Suppress irrelevant IntelliJ warning
     // noinspection JSCheckFunctionSignatures
     return new Headers(Array.from(headers.entries())
-        .filter(pair =>
-            !UNSIGNABLE_HEADERS.includes(pair[0])
-            && !pair[0].startsWith('cf-')
-            && !('ALLOWED_HEADERS' in env && !env['ALLOWED_HEADERS'].includes(pair[0]))
-        ));
+        .filter(pair => !(
+            UNSIGNABLE_HEADERS.includes(pair[0])
+            || pair[0].startsWith('cf-')
+            || ('ALLOWED_HEADERS' in env && !env['ALLOWED_HEADERS'].includes(pair[0]))
+        ))
+    );
 }
 
 function createHeadResponse(response) {
