@@ -102,12 +102,13 @@ Note that, if you use the `$host` configuration, you must configure a [Route](ht
 
 ### Restricting Signed HTTP Headers in the Upstream Request
 
-By default, all HTTP headers in the downstream request from the client are signed and included in the upstream request to Backlaze B2, except the following:
+By default, all HTTP headers in the downstream request from the client are signed and included in the upstream request to Backblaze B2, except the following:
 
 * Cloudflare headers with the prefix `cf-`, plus `x-forwarded-proto` and `x-real-ip`: these are set in the downstream request by Cloudflare, rather than by the client. In addition, `x-real-ip` is removed from the upstream request.
 * `accept-encoding`: No matter what the client passes, Cloudflare sets `accept-encoding` in the incoming request to `gzip, br` and then modifies the outgoing request, setting `accept-encoding` to `gzip`. This breaks the AWS v4 signature.
+* Conditional headers such as `if-match` and `if-modified-since` may be sent by the client but Cloudflare does not forward them in the upstream request if it does not have the resource in its cache, since Cloudflare needs the resource unconditionally.
 
-If you wish to further restrict the set of headers that will be signed and included, you can configure `ALLOWED_HEADERS` in `wrangler.toml`. If `ALLOWED_HEADERS` is set, then the listed  headers will be included in the signed upstream request alongside the minimal set of headers required for an AWS v4 signature: `authorization`, `x-amz-content-sha256` and `x-amz-date`.
+If you wish to further restrict the set of headers that will be signed and included, you can configure `ALLOWED_HEADERS` in `wrangler.toml`. If `ALLOWED_HEADERS` is set, then  the listed headers will be included in the signed upstream request alongside the minimal set of headers required for an AWS v4 signature: `authorization`, `x-amz-content-sha256` and `x-amz-date`.
 
 Note that, if `x-amz-content-sha256` is not included in `ALLOWED_HEADERS`, then any value supplied in the incoming request will be discarded and `x-amz-content-sha256` will be set to `UNSIGNED-PAYLOAD` in the outgoing request.
 
@@ -118,10 +119,6 @@ ALLOWED_HEADERS = [
     "content-type",
     "date",
     "host",
-    "if-match",
-    "if-modified-since",
-    "if-none-match",
-    "if-unmodified-since",
     "range",
     "x-amz-content-sha256",
     "x-amz-date",
