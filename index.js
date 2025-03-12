@@ -118,7 +118,7 @@ export default {
         // Save the request method, so we can process responses for HEAD requests appropriately
         const requestMethod = request.method;
 
-        if (rcloneDownload && request.headers.get('user-agent')?.includes('rclone')) {
+        if (rcloneDownload) {
             if (env['BUCKET_NAME'] === "$path") {
                 // Remove leading file/ prefix from the path
                 url.pathname = path.replace(/^file\//, "");
