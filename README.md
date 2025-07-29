@@ -19,7 +19,7 @@ npm install
 
 ## Worker Configuration
 
-Copy `wrangler.toml.template` to `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2, and `RCLONE_DOWNLOAD` to use the worker with rclone's `--b2-download-url` option.
+Open `wrangler.toml` and configure `B2_APPLICATION_KEY_ID`, `B2_ENDPOINT` and `BUCKET_NAME`. You may also configure `ALLOWED_HEADERS` to restrict the set of headers that will be signed and included in the upstream request to Backblaze B2, and `RCLONE_DOWNLOAD` to use the worker with rclone's `--b2-download-url` option.
 
 ```toml
 [vars]
