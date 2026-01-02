@@ -11,10 +11,10 @@
   "author": "Pat Patterson <pat@backblaze.com>",
   "license": "MIT",
   "devDependencies": {
-    "prettier": "^3.3.3"
+    "prettier": "^3.7.4",
+    "wrangler": "^4.54.0"
   },
   "dependencies": {
-    "aws4fetch": "^1.0.20",
-    "wrangler": "^3.80.1"
+    "aws4fetch": "^1.0.20"
   }
 }
