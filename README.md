@@ -154,15 +154,17 @@ Since the bucket is private, the Cloudflare Worker signs each request to Backbla
 
 ## Wrangler
 
-You can use this repository as a template for your own worker using [`wrangler`](https://github.com/cloudflare/wrangler):
+Ensure you are using the latest version of [`wrangler`](https://developers.cloudflare.com/workers/wrangler/), since several commands have been replaced between versions.
+
+You can use this repository as a template for your own worker using [Cloudflare's C3 CLI](https://developers.cloudflare.com/pages/get-started/c3/):
 
 ```bash
-wrangler generate projectname https://github.com/backblaze-b2-samples/cloudflare-b2
+npm create cloudflare@latest -- --template https://github.com/backblaze-b2-samples/cloudflare-b2 --deploy false projectname
 ```
 
-## Serverless
+If you wish to create a GitHub repository for your worker, it's best to do so now, before you make any changes.
 
-To deploy using serverless add a [`serverless.yml`](https://serverless.com/framework/docs/providers/cloudflare/) file.
+Note that you must run `npm install` before you deploy the worker to Cloudflare. Once you have done so, you can run `npx wrangler deploy`.
 
 ## Range Requests
 
