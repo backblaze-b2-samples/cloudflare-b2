@@ -6,9 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-* Fixed comments around RCLONE_DOWNLOAD in wrangler.toml.template ([@jingyuanliang](https://github.com/jingyuanliang/))
+### Fixed
+
 * Updated README to use current `npm create cloudflare` and `npx wrangler deploy` commands ([@harrisonratcliffe](https://github.com/harrisonratcliffe/))
+* Fixed comments around RCLONE_DOWNLOAD in wrangler.toml.template ([@jingyuanliang](https://github.com/jingyuanliang/))
+* Do not sign conditional request headers, since they are not always passed upstream by Cloudflare.
+* Fixed `RCLONE_DOWNLOAD` option so that bucket name can be passed in the path.
+
+### Changed
+
 * Bumped direct dependencies to current versions, moved `wrangler` to `devDependencies`.
+* Removed user-agent check for rcloneDownload - this allows other clients to use B2 friendly URLs.
 
 ## [1.2.0] - 2024-10-09
 
