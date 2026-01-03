@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 * Fixed comments around RCLONE_DOWNLOAD in wrangler.toml.template ([@jingyuanliang](https://github.com/jingyuanliang/))
-* 
+* Updated README to use current `npm create cloudflare` and `npx wrangler deploy` commands ([@harrisonratcliffe](https://github.com/harrisonratcliffe/))
 
 ## [1.2.0] - 2024-10-09
 
