@@ -9,6 +9,10 @@ jobs:
     name: Dry Run
     steps:
       - uses: actions/checkout@v4
+      # Wrangler action uses wrangler 3.x, this is a workaround to use current 4.x
+      # See https://github.com/cloudflare/wrangler-action/issues/390
+      - name: Install Wrangler v4
+        run: npm install --save-dev wrangler@4
       - name: Dry Run
         uses: cloudflare/wrangler-action@v3
         with:
