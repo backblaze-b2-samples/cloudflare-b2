@@ -14,6 +14,7 @@ cd cloudflare-b2
 You must also install dependencies before you can deploy or publish the worker:
 
 ```shell
+node --version # v22 or later
 npm install
 ```
 

@@ -10,6 +10,9 @@
   },
   "author": "Pat Patterson <pat@backblaze.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "prettier": "^3.7.4",
     "wrangler": "^4.123.0"
