@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* CI dry run calls the locked `wrangler` through `npx` instead of `cloudflare/wrangler-action`.
 * Bumped direct dependencies to current versions, moved `wrangler` to `devDependencies`.
 * Removed user-agent check for rcloneDownload - this allows other clients to use B2 friendly URLs.
 
